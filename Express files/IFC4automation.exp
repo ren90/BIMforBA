@@ -3273,6 +3273,8 @@ ENTITY IfcAutomationDevicePreset
   	,IfcAutomationSchedule
   	,IfcAutomationEvent))
   SUBTYPE OF (IfcAutomationObject);
+    INVERSE
+	    Setpoints 	: SET[0:?] OF IfcRelDefinesSetpoint  FOR RelatingDevicePreset;
 END_ENTITY;
 
 ENTITY IfcAutomationDevicePresetType
@@ -3284,17 +3286,19 @@ ENTITY IfcAutomationDevicePresetType
 END_ENTITY;
 
 ENTITY IfcAutomationDatapointSet
-  ABSTRACT SUPERTYPE OF (ONEOF 
-    (IfcAutomationGroup
-  	,IfcAutomationZone))
-  SUBTYPE OF (IfcAutomationObject);
+  	ABSTRACT SUPERTYPE OF (ONEOF 
+    	(IfcAutomationGroup
+  		,IfcAutomationZone))
+  	SUBTYPE OF (IfcAutomationObject);
+	INVERSE
+	    Datapoints 	: SET[0:?] OF IfcRelGroupsDatapoint  FOR RelatingDatapointSet;
 END_ENTITY;
 
 ENTITY IfcAutomationDatapointSetType
-  ABSTRACT SUPERTYPE OF (ONEOF 
-    (IfcAutomationGroupType
-  	,IfcAutomationZoneType))
-  SUBTYPE OF (IfcAutomationObjectType);
+  	ABSTRACT SUPERTYPE OF (ONEOF 
+    	(IfcAutomationGroupType
+  		,IfcAutomationZoneType))
+	  SUBTYPE OF (IfcAutomationObjectType);
 END_ENTITY;
 
 ENTITY IfcAutomationDatapoint
@@ -3306,8 +3310,15 @@ ENTITY IfcAutomationDatapoint
   DataType : IfcAutomationDataTypeEnum;
   FlowType : IfcAutomationFlowTypeEnum;
   (* o datapoint tem propriedades que sao definidas pelo property set *)
-  (* INVERSE *) 
-
+  INVERSE  
+  	HasBoundDatapoints 	: SET[0:?] OF IfcRelBindsByDatapoint  FOR RelatingDatapoint;
+	IsBoundToDatapoints : SET[0:?] OF IfcRelBindsByDatapoint  FOR RelatedDatapoint;
+	HasDatapointSets	: SET[0:?] OF IfcRelGroupsDatapoint   FOR RelatingDatapoint;	
+	HasSetpoints		: SET[0:?] OF IfcRelBindsBySetpoint   FOR RelatingDatapoint;	
+	HasEvents			: SET[0:?] OF IfcRelTriggersDatapoint FOR RelatingDatapoint;	
+	HasControlDevice	: SET[1:1] OF IfcRelBelongsToDevice   FOR RelatingDatapoint;	
+	HasSpace			: SET[0:1] OF IfcRelInfluencesSpace   FOR RelatingDatapoint;	
+	
 	(*TODO: Relationships*)
 
 END_ENTITY;
@@ -3320,110 +3331,89 @@ ENTITY IfcAutomationDatapointType
   Address : IfcAddress;
   DataType : IfcAutomationDataTypeEnum;
   FlowType : IfcAutomationFlowTypeEnum;
-  (* o datapoint tem propriedades que sao definidas pelo property set *)
-  (* INVERSE *)
-	(*TODO: Relationships*)
-
 END_ENTITY;
 
 ENTITY IfcAutomationControlDevice
 	SUBTYPE OF (IfcAutomationObject);
   	PredefinedType : IfcAutomationControlDeviceTypeEnum;
-(* INVERSE *)
-	(*TODO: Relationships*)
+	
+	INVERSE 
+		HasDatapoints						: SET[1:?] OF IfcRelBelongsToDevice FOR RelatingDevice;	
+		HasDistributionControlElement		: SET[1:?] OF IfcRelBelongsToControlElement FOR RelatingDevice;	
 END_ENTITY;
 
 ENTITY IfcAutomationControlDeviceType
 	SUBTYPE OF (IfcAutomationObjectType);
   	PredefinedType : IfcAutomationControlDeviceTypeEnum;
-	(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationGroup
 	SUBTYPE OF (IfcAutomationDatapointSet);
   	PredefinedType : IfcAutomationGroupTypeEnum;
-(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationGroupType
 	SUBTYPE OF (IfcAutomationDatapointSetType);
   	PredefinedType : IfcAutomationGroupTypeEnum;
-	(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationScenario
 	SUBTYPE OF (IfcAutomationDevicePreset);
   	PredefinedType : IfcAutomationScenarioTypeEnum;
-(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationScenarioType
 	SUBTYPE OF (IfcAutomationDevicePresetType);
   	PredefinedType : IfcAutomationScenarioTypeEnum;
-	(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationSchedule
 	SUBTYPE OF (IfcAutomationDevicePreset);
   	PredefinedType : IfcAutomationScheduleTypeEnum;
-(* INVERSE *)
-	(*TODO: Relationships*)
+	INVERSE
+		HasEvents	: SET[1:1] OF IfcRelDefinesSchedule FOR RelatingSchedule;	
 END_ENTITY;
 
 ENTITY IfcAutomationScheduleType
 	SUBTYPE OF (IfcAutomationDevicePresetType);
   	PredefinedType : IfcAutomationScheduleTypeEnum;
-	(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationEvent
 	SUBTYPE OF (IfcAutomationDevicePreset);
 	TriggerDatapoint : IfcAutomationDatapoint;
 	TriggerValue	 : IfcText;
-(* INVERSE *)
-	(*TODO: Relationships*)
+	INVERSE
+		HasDatapoints	: SET[1:?] OF IfcRelTriggersDatapoint FOR RelatingEvent;	
 END_ENTITY;
 
 ENTITY IfcAutomationEventType
 	SUBTYPE OF (IfcAutomationDevicePresetType);
 	TriggerDatapoint : IfcAutomationDatapoint;
 	TriggerValue	 : IfcText;
-	(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationAlarm
 	SUBTYPE OF (IfcAutomationEvent);
   	PredefinedType : IfcAutomationAlarmTypeEnum;
-(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationAlarmType
 	SUBTYPE OF (IfcAutomationEventType);
   	PredefinedType : IfcAutomationAlarmTypeEnum;
-	(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationZone
 	SUBTYPE OF (IfcAutomationDatapointSet);
   	PredefinedType : IfcAutomationZoneTypeEnum;
-(* INVERSE *)
-	(*TODO: Relationships*)
+	INVERSE
+		RelatedSpace	: SET[1:?] OF IfcRelLocatesInSpace FOR RelatingZone;	
+	
 END_ENTITY;
 
 ENTITY IfcAutomationZoneType
 	SUBTYPE OF (IfcAutomationDatapointSetType);
   	PredefinedType : IfcAutomationZoneTypeEnum;
-	(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 
 ENTITY IfcAutomationSetpoint
@@ -3432,8 +3422,10 @@ ENTITY IfcAutomationSetpoint
 	setpointValue : IfcText;
 	setpointValueType : IfcAutomationSetpointValueEnum;
 	setpointValueUnit : IfcAutomationUnitEnum;
-(* INVERSE *)
-	(*TODO: Relationships*)
+	INVERSE
+		HasDevicePresets	: SET[0:?] OF IfcRelDefinesSetpoint FOR RelatingSetpoint;	
+		HasDatapoints		: SET[0:?] OF IfcRelBindsBySetpoint FOR RelatedSetpoint;	
+		
 END_ENTITY;
 
 ENTITY IfcAutomationSetpointType
@@ -3442,8 +3434,6 @@ ENTITY IfcAutomationSetpointType
 	setpointValue : IfcText;
 	setpointValueType : IfcAutomationSetpointValueEnum;
 	setpointValueUnit : IfcAutomationUnitEnum;
-	(* INVERSE *)
-	(*TODO: Relationships*)
 END_ENTITY;
 	
 (* RELATIONSHIPS *)
@@ -3453,6 +3443,13 @@ ENTITY IfcRelBelongsToDevice
  SUBTYPE OF (IfcRelationship);
  	RelatingDevice 			: IfcAutomationControlDevice;
  	RelatingDatapoint		: IfcAutomationDatapoint;
+	(*falta constraints*)
+END_ENTITY;
+
+ENTITY IfcRelBelongsToControlElement
+ SUBTYPE OF (IfcRelationship);
+ 	RelatingDevice 				: IfcAutomationControlDevice;
+ 	RelatingControlElement		: IfcDistributionControlElement;
 	(*falta constraints*)
 END_ENTITY;
 
@@ -3498,6 +3495,12 @@ ENTITY IfcRelBindsBySetpoint
  SUBTYPE OF (IfcRelBindsToDatapoint);
  	RelatedSetpoint : IfcAutomationSetpoint;
 	(*falta constraints*)
+END_ENTITY;
+
+ENTITY IfcRelLocatesInSpace
+ SUBTYPE OF (IfcRelationship);
+ 	RelatingZone	 : IfcAutomationZone;
+ 	RelatingSpace : IfcSpace;
 END_ENTITY;
 
 ENTITY IfcRelDefinesSchedule
