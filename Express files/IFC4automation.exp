@@ -3315,7 +3315,7 @@ ENTITY IfcAutomationDatapoint
 	IsBoundToDatapoints : SET[0:?] OF IfcRelBindsByDatapoint  FOR RelatedDatapoint;
 	HasDatapointSets	: SET[0:?] OF IfcRelGroupsDatapoint   FOR RelatingDatapoint;	
 	HasSetpoints		: SET[0:?] OF IfcRelBindsBySetpoint   FOR RelatingDatapoint;	
-	HasEvents			: SET[0:?] OF IfcRelTriggersDatapoint FOR RelatingDatapoint;	
+	HasEvents			: SET[0:?] OF IfcRelTriggersEvent FOR RelatingDatapoint;	
 	HasControlDevice	: SET[1:1] OF IfcRelBelongsToDevice   FOR RelatingDatapoint;	
 	HasSpace			: SET[0:1] OF IfcRelInfluencesSpace   FOR RelatingDatapoint;	
 	
@@ -3384,7 +3384,7 @@ ENTITY IfcAutomationEvent
 	TriggerDatapoint : IfcAutomationDatapoint;
 	TriggerValue	 : IfcText;
 	INVERSE
-		HasDatapoints	: SET[1:?] OF IfcRelTriggersDatapoint FOR RelatingEvent;	
+		HasDatapoints	: SET[1:?] OF IfcRelTriggersEvent FOR RelatingEvent;	
 END_ENTITY;
 
 ENTITY IfcAutomationEventType
@@ -3461,7 +3461,7 @@ ENTITY IfcRelGroupsDatapoint
 END_ENTITY;
 
 (*implements datapoint/equipment relation*)
-ENTITY IfcRelTriggersDatapoint
+ENTITY IfcRelTriggersEvent
  SUBTYPE OF (IfcRelationship);
  	RelatingEvent 			: IfcAutomationEvent;
  	RelatingDatapoint		: IfcAutomationDatapoint;
@@ -3500,7 +3500,7 @@ END_ENTITY;
 ENTITY IfcRelLocatesInSpace
  SUBTYPE OF (IfcRelationship);
  	RelatingZone	 : IfcAutomationZone;
- 	RelatingSpace : IfcSpace;
+ 	RelatingSpace	 : IfcSpace;
 END_ENTITY;
 
 ENTITY IfcRelDefinesSchedule
