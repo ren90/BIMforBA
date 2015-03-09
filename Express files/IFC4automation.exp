@@ -3144,12 +3144,18 @@ END_TYPE;
 
 (* TYPES *)
 
-TYPE IfcAutomationDatapointTypeEnum = ENUMERATION OF 
-  (INST_VAL
-  ,ACC_VALUE
-  ,MAX_VAL
-  ,MIN_VAL
-  ,ERROR_VAL); 
+TYPE IfcAutomationInputDatapointTypeEnum = ENUMERATION OF 
+  (CONFIGURATION
+  ,ACTUATION
+  ,USERDEFINED
+  ,NOTDEFINED); 
+END_TYPE;
+
+TYPE IfcAutomationOutputDatapointTypeEnum = ENUMERATION OF 
+  (MEASUREMENT
+  ,STATE
+  ,USERDEFINED
+  ,NOTDEFINED); 
 END_TYPE;
 
 TYPE IfcAutomationControlDeviceTypeEnum = ENUMERATION OF 
@@ -3182,6 +3188,16 @@ TYPE IfcAutomationZoneTypeEnum = ENUMERATION OF
   ,NOTDEFINED); 
 END_TYPE;
 
+TYPE IfcAutomationDatapointWriteTypeEnum = ENUMERATION OF 
+   (USERDEFINED
+  ,NOTDEFINED);  
+END_TYPE;
+
+TYPE IfcAutomationActuationTypeEnum = ENUMERATION OF 
+   (USERDEFINED
+  ,NOTDEFINED);  
+END_TYPE;
+
 TYPE IfcAutomationSetpointTypeEnum = ENUMERATION OF 
    (USERDEFINED
   ,NOTDEFINED);  
@@ -3194,26 +3210,25 @@ END_TYPE;
 
 
 (* ELEMENTS *)
-
 (* IfcAutomationElement := herda de IfcElement*)
 
 ENTITY IfcAutomationObject
   ABSTRACT SUPERTYPE OF (ONEOF 
-    (IfcAutomationControlDevice
-    ,IfcAutomationDatapoint
-    ,IfcAutomationSetpoint
+    (IfcAutomationDevicePreset
+    ,IfcAutomationDatapointWrite
     ,IfcAutomationDatapointSet
-  	,IfcAutomationDevicePreset))
+    ,IfcAutomationDatapoint
+  	,IfcAutomationControlDevice ))
   SUBTYPE OF (IfcObject);
 END_ENTITY;
 
 ENTITY IfcAutomationObjectType
   ABSTRACT SUPERTYPE OF (ONEOF 
-    (IfcAutomationControlDeviceType
-    ,IfcAutomationDatapointType
-    ,IfcAutomationSetpointType
+    (IfcAutomationDevicePresetType
+    ,IfcAutomationDatapointWriteType
     ,IfcAutomationDatapointSetType
-  	,IfcAutomationDevicePresetType))
+    ,IfcAutomationDatapointType
+    ,IfcAutomationControlDeviceType))
   SUBTYPE OF (IfcTypeObject);
 END_ENTITY;
 
@@ -3224,7 +3239,7 @@ ENTITY IfcAutomationDevicePreset
   	,IfcAutomationEvent))
   SUBTYPE OF (IfcAutomationObject);
     INVERSE
-	    Setpoints 	: SET[0:1] OF IfcRelDefinesSetpoint  FOR RelatingDevicePreset;
+	    HasDatapointWrites 	: SET[0:1] OF IfcRelDefinesDatapointWrite FOR RelatingDevicePreset;
 END_ENTITY;
 
 ENTITY IfcAutomationDevicePresetType
@@ -3235,83 +3250,29 @@ ENTITY IfcAutomationDevicePresetType
   SUBTYPE OF (IfcAutomationObjectType);
 END_ENTITY;
 
-ENTITY IfcAutomationDatapointSet
-  	ABSTRACT SUPERTYPE OF (ONEOF 
-    	(IfcAutomationGroup
-  		,IfcAutomationZone))
-  	SUBTYPE OF (IfcAutomationObject);
+ENTITY IfcAutomationEvent
+	SUPERTYPE OF (IfcAutomationAlarm)
+	SUBTYPE OF (IfcAutomationDevicePreset);
+  	PredefinedType : IfcAutomationEventTypeEnum;
+	TriggerValue	 : IfcText;
 	INVERSE
-	    Datapoints 	: SET[0:1] OF IfcRelGroupsDatapoint  FOR RelatingDatapointSet;
+		HasDatapoints	: SET[0:1] OF IfcRelTriggersEvent FOR RelatingEvent;	
 END_ENTITY;
 
-ENTITY IfcAutomationDatapointSetType
-  	ABSTRACT SUPERTYPE OF (ONEOF 
-    	(IfcAutomationGroupType
-  		,IfcAutomationZoneType))
-	  SUBTYPE OF (IfcAutomationObjectType);
+ENTITY IfcAutomationEventType
+	SUPERTYPE OF (IfcAutomationAlarmType)
+	SUBTYPE OF (IfcAutomationDevicePresetType);
+  	PredefinedType : IfcAutomationEventTypeEnum;
+	TriggerDatapoint : IfcAutomationDatapoint;
+	TriggerValue	 : IfcText;
 END_ENTITY;
 
-ENTITY IfcAutomationDatapoint
-  ABSTRACT SUPERTYPE OF (ONEOF (IfcAutomationInputDatapoint, IfcAutomationOutputDatapoint))
-  SUBTYPE OF (IfcAutomationObject);
-  PredefinedType	: OPTIONAL IfcAutomationDatapointTypeEnum;
-  Unit 				: OPTIONAL IfcText;
-  DataType 			: IfcAutomationDataTypeEnum;
-  (*Address 			: IfcAddress;*)
-  (*UpperLimit 		: INTEGER;*)
-  (*BottomLimit 		: INTEGER;*)
-  
-  (* o datapoint tem propriedades que sao definidas pelo property set? *)
-  INVERSE  
-	HasDatapointSets		: SET[0:?] OF IfcRelGroupsDatapoint   FOR RelatingDatapoint;	
-	HasControlDevice		: SET[0:1] OF IfcRelBelongsToDevice   FOR RelatingDatapoint;	
-	HasSpace				: SET[0:1] OF IfcRelInfluencesSpace   FOR RelatingDatapoint;	
-
+ENTITY IfcAutomationAlarm
+	SUBTYPE OF (IfcAutomationEvent);
 END_ENTITY;
 
-ENTITY IfcAutomationInputDatapoint
-  SUBTYPE OF (IfcAutomationDatapoint);
-  INVERSE  
-	HasSetpoints			: SET[0:?] OF IfcRelBindsBySetpoint   FOR InputDatapoint;	
-  	HasOutputDatapoints 	: SET[0:?] OF IfcRelBindsByDatapoint  FOR InputDatapoint;
-END_ENTITY;
-
-ENTITY IfcAutomationOutputDatapoint
-  SUBTYPE OF (IfcAutomationDatapoint);
-  INVERSE  
-	TriggersEvents			: SET[0:?] OF IfcRelTriggersEvent FOR OutputDatapoint;	
-	HasInputDatapoints 		: SET[0:1] OF IfcRelBindsByDatapoint  FOR OutputDatapoint;
-END_ENTITY;
-
-ENTITY IfcAutomationDatapointType
-  SUBTYPE OF (IfcAutomationObjectType);
-  PredefinedType : OPTIONAL IfcAutomationDataPointTypeEnum;
-  Unit : OPTIONAL IfcText;
-  Address : IfcAddress;
-  DataType : IfcAutomationDataTypeEnum;
-END_ENTITY;
-
-ENTITY IfcAutomationControlDevice
-	SUBTYPE OF (IfcAutomationObject);
-  	PredefinedType : IfcAutomationControlDeviceTypeEnum;
-	INVERSE 
-		HasDatapoints						: SET[0:1] OF IfcRelBelongsToDevice FOR RelatingDevice;	
-		HasDistributionControlElement		: SET[0:1] OF IfcRelBelongsToControlElement FOR RelatingDevice;	
-END_ENTITY;
-
-ENTITY IfcAutomationControlDeviceType
-	SUBTYPE OF (IfcAutomationObjectType);
-  	PredefinedType : IfcAutomationControlDeviceTypeEnum;
-END_ENTITY;
-
-ENTITY IfcAutomationGroup
-	SUBTYPE OF (IfcAutomationDatapointSet);
-  	PredefinedType : IfcAutomationGroupTypeEnum;
-END_ENTITY;
-
-ENTITY IfcAutomationGroupType
-	SUBTYPE OF (IfcAutomationDatapointSetType);
-  	PredefinedType : IfcAutomationGroupTypeEnum;
+ENTITY IfcAutomationAlarmType
+	SUBTYPE OF (IfcAutomationEventType);
 END_ENTITY;
 
 ENTITY IfcAutomationScenario
@@ -3336,35 +3297,78 @@ ENTITY IfcAutomationScheduleType
   	PredefinedType : IfcAutomationScheduleTypeEnum;
 END_ENTITY;
 
-ENTITY IfcAutomationEvent
-	SUBTYPE OF (IfcAutomationDevicePreset);
-	TriggerDatapoint : IfcAutomationDatapoint;
-	TriggerValue	 : IfcText;
-  	PredefinedType : IfcAutomationEventTypeEnum;
+ENTITY IfcAutomationDatapointWrite
+  ABSTRACT SUPERTYPE OF (ONEOF (IfcAutomationActuation ,IfcAutomationSetpoint))
+  SUBTYPE OF (IfcAutomationObject);
+  	writeValue : IfcText;
+	dataType : IfcAutomationDataTypeEnum;
+	unit : IfcText;
+    INVERSE
+		HasDevicePresets	: SET[0:?] OF IfcRelDefinesDatapointWrite FOR RelatingDatapointWrite;	
+		HasInputDatapoints	: SET[0:1] OF IfcRelBindsByDatapointWrite FOR RelatedDatapointWrite;	
+END_ENTITY;
+
+ENTITY IfcAutomationDatapointWriteType
+  ABSTRACT SUPERTYPE OF (ONEOF 
+    (IfcAutomationActuationType
+  	,IfcAutomationSetpointType))
+  SUBTYPE OF (IfcAutomationObjectType);
+  	writeValue : IfcText;
+	dataType : IfcAutomationDataTypeEnum;
+	unit : IfcText;
+END_ENTITY;
+
+ENTITY IfcAutomationSetpoint
+	SUBTYPE OF (IfcAutomationDatapointWrite);
+  	PredefinedType : IfcAutomationSetpointTypeEnum;
+END_ENTITY;
+
+ENTITY IfcAutomationSetpointType
+	SUBTYPE OF (IfcAutomationDatapointWriteType);
+  	PredefinedType : IfcAutomationSetpointTypeEnum;
+END_ENTITY;
+
+ENTITY IfcAutomationActuation
+	SUBTYPE OF (IfcAutomationDatapointWrite);
+  	PredefinedType : IfcAutomationActuationTypeEnum;
+END_ENTITY;
+
+ENTITY IfcAutomationActuationType
+	SUBTYPE OF (IfcAutomationDatapointWriteType);
+  	PredefinedType : IfcAutomationActuationTypeEnum;
+END_ENTITY;
+
+ENTITY IfcAutomationDatapointSet
+  	ABSTRACT SUPERTYPE OF (ONEOF 
+    	(IfcAutomationGroup
+  		,IfcAutomationZone))
+  	SUBTYPE OF (IfcAutomationObject);
 	INVERSE
-		HasDatapoints	: SET[0:1] OF IfcRelTriggersEvent FOR RelatingEvent;	
+	    Datapoints 	: SET[0:1] OF IfcRelGroupsDatapoint  FOR RelatingDatapointSet;
 END_ENTITY;
 
-ENTITY IfcAutomationEventType
-	SUBTYPE OF (IfcAutomationDevicePresetType);
-  	PredefinedType : IfcAutomationEventTypeEnum;
-	TriggerDatapoint : IfcAutomationDatapoint;
-	TriggerValue	 : IfcText;
+ENTITY IfcAutomationDatapointSetType
+  	ABSTRACT SUPERTYPE OF (ONEOF 
+    	(IfcAutomationGroupType
+  		,IfcAutomationZoneType))
+	  SUBTYPE OF (IfcAutomationObjectType);
 END_ENTITY;
 
-ENTITY IfcAutomationAlarm
-	SUBTYPE OF (IfcAutomationEvent);
+ENTITY IfcAutomationGroup
+	SUBTYPE OF (IfcAutomationDatapointSet);
+  	PredefinedType : IfcAutomationGroupTypeEnum;
 END_ENTITY;
 
-ENTITY IfcAutomationAlarmType
-	SUBTYPE OF (IfcAutomationEventType);
+ENTITY IfcAutomationGroupType
+	SUBTYPE OF (IfcAutomationDatapointSetType);
+  	PredefinedType : IfcAutomationGroupTypeEnum;
 END_ENTITY;
 
 ENTITY IfcAutomationZone
 	SUBTYPE OF (IfcAutomationDatapointSet);
   	PredefinedType : IfcAutomationZoneTypeEnum;
 	INVERSE
-		RelatedSpace	: SET[1:?] OF IfcRelLocatesInSpace FOR RelatingZone;	
+		RelatedSpace	: SET[0:1] OF IfcRelLocatesInSpace FOR RelatingZone;	
 END_ENTITY;
 
 ENTITY IfcAutomationZoneType
@@ -3372,23 +3376,64 @@ ENTITY IfcAutomationZoneType
   	PredefinedType : IfcAutomationZoneTypeEnum;
 END_ENTITY;
 
-ENTITY IfcAutomationSetpoint
-	SUBTYPE OF (IfcAutomationObject);
-  	PredefinedType : IfcAutomationSetpointTypeEnum;
-	setpointValue : IfcText;
-	setpointValueDataType : IfcAutomationDataTypeEnum;
-	setpointValueUnit : IfcText;
-	INVERSE
-		HasDevicePresets	: SET[0:?] OF IfcRelDefinesSetpoint FOR RelatingSetpoint;	
-		HasInputDatapoints	: SET[0:1] OF IfcRelBindsBySetpoint FOR RelatedSetpoint;	
+ENTITY IfcAutomationDatapoint
+  ABSTRACT SUPERTYPE OF (ONEOF (IfcAutomationInputDatapoint, IfcAutomationOutputDatapoint))
+  SUBTYPE OF (IfcAutomationObject);
+  Unit 				: OPTIONAL IfcText;
+  DataType 			: IfcAutomationDataTypeEnum;
+  Address 			: IfcText;
+  INVERSE  
+	HasDatapointSets		: SET[0:?] OF IfcRelGroupsDatapoint   FOR RelatingDatapoint;	
+	HasControlDevice		: SET[0:1] OF IfcRelBelongsToDevice   FOR RelatingDatapoint;	
+	HasSpace				: SET[0:1] OF IfcRelInfluencesSpace   FOR RelatingDatapoint;	
+
 END_ENTITY;
 
-ENTITY IfcAutomationSetpointType
+ENTITY IfcAutomationDatapointType
+  ABSTRACT SUPERTYPE OF (ONEOF (IfcAutomationInputDatapointType, IfcAutomationOutputDatapointType))
+  SUBTYPE OF (IfcAutomationObjectType);
+  Unit : OPTIONAL IfcText;
+  DataType : IfcAutomationDataTypeEnum;
+  Address 			: IfcText;
+END_ENTITY;
+
+ENTITY IfcAutomationInputDatapoint
+  SUBTYPE OF (IfcAutomationDatapoint);
+  PredefinedType : OPTIONAL IfcAutomationInputDatapointTypeEnum;
+  INVERSE  
+	HasDatapointWrites		: SET[0:?] OF IfcRelBindsByDatapointWrite   FOR InputDatapoint;	
+  	HasOutputDatapoints 	: SET[0:?] OF IfcRelBindsByDatapoint  		FOR InputDatapoint;
+END_ENTITY;
+
+ENTITY IfcAutomationOutputDatapoint
+  	SUBTYPE OF (IfcAutomationDatapoint);
+  PredefinedType : OPTIONAL IfcAutomationOutputDatapointTypeEnum;
+  INVERSE  
+	TriggersEvents			: SET[0:?] OF IfcRelTriggersEvent FOR OutputDatapoint;	
+	HasInputDatapoints 		: SET[0:1] OF IfcRelBindsByDatapoint  FOR OutputDatapoint;
+END_ENTITY;
+
+ENTITY IfcAutomationInputDatapointType
+  SUBTYPE OF (IfcAutomationDatapointType);
+  PredefinedType : OPTIONAL IfcAutomationInputDatapointTypeEnum;
+END_ENTITY;
+
+ENTITY IfcAutomationOutputDatapointType
+  SUBTYPE OF (IfcAutomationDatapointType);
+  PredefinedType : OPTIONAL IfcAutomationOutputDatapointTypeEnum;
+END_ENTITY;
+
+ENTITY IfcAutomationControlDevice
+	SUBTYPE OF (IfcAutomationObject);
+  	PredefinedType : IfcAutomationControlDeviceTypeEnum;
+	INVERSE 
+		HasDatapoints						: SET[0:1] OF IfcRelBelongsToDevice FOR RelatingDevice;	
+		HasDistributionControlElement		: SET[0:1] OF IfcRelBelongsToControlElement FOR RelatingDevice;	
+END_ENTITY;
+
+ENTITY IfcAutomationControlDeviceType
 	SUBTYPE OF (IfcAutomationObjectType);
-  	PredefinedType : IfcAutomationSetpointTypeEnum;
-	setpointValue : IfcText;
-	setpointValueType : IfcAutomationDataTypeEnum;
-	setpointValueUnit : IfcText;
+  	PredefinedType : IfcAutomationControlDeviceTypeEnum;
 END_ENTITY;
 	
 (* RELATIONSHIPS *)
@@ -3446,16 +3491,16 @@ ENTITY IfcRelBindsByDatapoint
 	(*falta constraints*)
 END_ENTITY;
 
-ENTITY IfcRelBindsBySetpoint
+ENTITY IfcRelBindsByDatapointWrite
  SUBTYPE OF (IfcRelBindsToDatapoint);
- 	RelatedSetpoint : IfcAutomationSetpoint;
+ 	RelatedDatapointWrite : IfcAutomationDatapointWrite;
 	(*falta constraints*)
 END_ENTITY;
 
 ENTITY IfcRelLocatesInSpace
  SUBTYPE OF (IfcRelationship);
  	RelatingZone	 : IfcAutomationZone;
- 	RelatingSpace	 : IfcSpace;
+ 	RelatingSpace	 : SET[1:?] OF IfcSpace;
 END_ENTITY;
 
 ENTITY IfcRelDefinesSchedule
@@ -3465,10 +3510,10 @@ ENTITY IfcRelDefinesSchedule
 	(*falta constraints*)
 END_ENTITY;
 
-ENTITY IfcRelDefinesSetpoint
+ENTITY IfcRelDefinesDatapointWrite
  SUBTYPE OF (IfcRelationship);
- 	RelatingDevicePreset : IfcAutomationDevicePreset;
- 	RelatingSetpoint 	 : SET[1:?] OF IfcAutomationSetpoint;
+ 	RelatingDevicePreset	: IfcAutomationDevicePreset;
+ 	RelatingDatapointWrite	: SET [1:?] OF IfcAutomationDatapointWrite;
 	(*falta constraints*)
 END_ENTITY;
 
